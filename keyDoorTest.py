@@ -1,7 +1,11 @@
 import gym
 from gym_minigrid.wrappers import NESWActionsImage
-from deep_rl import *
+from deep_rl import Task2, OptionCriticNet, SimpleConv, Config, OptionCriticAgent2, LinearSchedule, RescaleNormalizer, SignNormalizer, Storage
 import wandb
+import torch
+import random
+import numpy as np
+import os
 
 params = {
     "env": "MiniGrid-DoorKey-10x10-v1",
@@ -69,13 +73,13 @@ for seed in params["seed"]:
             actions = dist.sample()
             entropy = dist.entropy()
 
-            s_, rewards, terminals, info = env.step(to_np(actions))
+            s_, rewards, terminals, info = env.step(actions.cpu().detach().numpy())
             s_ = config.state_normalizer([s_[0]["image"]])
             rewards = config.reward_normalizer(rewards)
 
             storage.feed(prediction)
-            storage.feed({'reward': tensor(rewards).unsqueeze(-1),
-                          'mask': tensor(1 - terminals).unsqueeze(-1),
+            storage.feed({'reward': torch.tensor(rewards).unsqueeze(-1),
+                          'mask': torch.tensor(1 - terminals).unsqueeze(-1),
                           'option': options.unsqueeze(-1),
                           'prev_option': agent.prev_options.unsqueeze(-1),
                           'entropy': entropy.unsqueeze(-1),
@@ -94,7 +98,7 @@ for seed in params["seed"]:
 
                 sum_rewards = 0
 
-            agent.is_initial_states = tensor(terminals).byte()
+            agent.is_initial_states = torch.tensor(terminals).byte()
             agent.prev_options = options
             agent.states = s_
 
@@ -134,7 +138,7 @@ for seed in params["seed"]:
 
         agent.optimizer.zero_grad()
         (pi_loss + q_loss + beta_loss).backward()
-        nn.utils.clip_grad_norm_(agent.network.parameters(), config.gradient_clip)
+        torch.nn.utils.clip_grad_norm_(agent.network.parameters(), config.gradient_clip)
         agent.optimizer.step()
 
     if params["wandb_record"]: run.finish()

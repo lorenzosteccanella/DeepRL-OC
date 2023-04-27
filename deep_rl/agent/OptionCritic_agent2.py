@@ -60,7 +60,7 @@ class OptionCriticAgent2(BaseAgent):
             actions = dist.sample()
             entropy = dist.entropy()
 
-            next_states, rewards, terminals, info = self.task.step(to_np(actions))
+            next_states, rewards, terminals, info = self.task.step(actions.cpu().detach().numpy())
             self.record_online_return(info)
             next_states = config.state_normalizer(next_states)
             rewards = config.reward_normalizer(rewards)

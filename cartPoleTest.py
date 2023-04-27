@@ -56,7 +56,7 @@ while steps <= params["max_steps"]:
         actions = dist.sample()
         entropy = dist.entropy()
 
-        s_, rewards, terminals, info = env.step(to_np(actions))
+        s_, rewards, terminals, info = env.step(actions.cpu().detach().numpy())
         s_ = config.state_normalizer(s_)
         rewards = config.reward_normalizer(rewards)
 
