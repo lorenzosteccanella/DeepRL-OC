@@ -149,6 +149,32 @@ class DummyVecEnv(VecEnv):
     def close(self):
         return
 
+class DummyVecEnv2(VecEnv):
+    def __init__(self, envs):
+        self.envs = envs
+        env = self.envs[0]
+        VecEnv.__init__(self, len(envs), env.observation_space, env.action_space)
+        self.actions = None
+
+    def step_async(self, actions):
+        self.actions = actions
+
+    def step_wait(self):
+        data = []
+        for i in range(self.num_envs):
+            obs, rew, done, info = self.envs[i].step(self.actions[i])
+            if done:
+                obs = self.envs[i].reset()
+            data.append([obs, rew, done, info])
+        obs, rew, done, info = zip(*data)
+        return obs, np.asarray(rew), np.asarray(done), info
+
+    def reset(self):
+        return [env.reset() for env in self.envs]
+
+    def close(self):
+        return
+
 
 class Task:
     def __init__(self,
@@ -186,6 +212,38 @@ class Task:
     def step(self, actions):
         if isinstance(self.action_space, Box):
             actions = np.clip(actions, self.action_space.low, self.action_space.high)
+        return self.env.step(actions)
+
+
+class Task2:
+    def __init__(self,
+                 envs,
+                 single_process=True,
+                 log_dir=None,
+                 episode_life=True,
+                 seed=None):
+        if single_process:
+            Wrapper = DummyVecEnv2
+        else:
+            Wrapper = SubprocVecEnv
+        self.env = Wrapper(envs)
+        #self.observation_space = self.env.observation_space
+        #self.state_dim = int(np.prod(self.env.observation_space.shape))
+
+        #self.action_space = self.env.action_space
+        #if isinstance(self.action_space, Discrete):
+        #    self.action_dim = self.action_space.n
+        #elif isinstance(self.action_space, Box):
+        #    self.action_dim = self.action_space.shape[0]
+        #else:
+        #    assert 'unknown action space'
+
+    def reset(self):
+        return self.env.reset()
+
+    def step(self, actions):
+        #if isinstance(self.action_space, Box):
+            #actions = np.clip(actions, self.action_space.low, self.action_space.high)
         return self.env.step(actions)
 
 

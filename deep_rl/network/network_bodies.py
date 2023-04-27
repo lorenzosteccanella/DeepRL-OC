@@ -33,6 +33,21 @@ class NatureConvBody(nn.Module):
         return y
 
 
+class SimpleConv(nn.Module):
+    def __init__(self, in_channels=3):
+        super(SimpleConv, self).__init__()
+        self.feature_dim = 512
+        self.conv1 = layer_init(nn.Conv2d(3, 32, 7, stride=1, padding=1))
+        self.fc1 = nn.Linear(7200, 512)
+
+    def forward(self, x):
+        x = x.permute(0, 3, 1, 2)
+        y = F.relu(self.conv1(x))
+        y = y.view(y.size(0), -1)
+        y = F.relu(self.fc1(y))
+        return y
+
+
 class DDPGConvBody(nn.Module):
     def __init__(self, in_channels=4):
         super(DDPGConvBody, self).__init__()

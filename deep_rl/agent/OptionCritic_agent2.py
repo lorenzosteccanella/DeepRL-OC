@@ -9,11 +9,10 @@ from ..component import *
 from .BaseAgent import *
 
 
-class OptionCriticAgent(BaseAgent):
+class OptionCriticAgent2(BaseAgent):
     def __init__(self, config):
         BaseAgent.__init__(self, config)
         self.config = config
-        self.task = config.task_fn()
         self.network = config.network_fn()
         self.target_network = config.network_fn()
         self.optimizer = config.optimizer_fn(self.network.parameters())
@@ -21,8 +20,7 @@ class OptionCriticAgent(BaseAgent):
 
         self.total_steps = 0
         self.worker_index = tensor(np.arange(config.num_workers)).long()
-        s = self.task.reset()
-        self.states = self.config.state_normalizer(s)
+
         self.is_initial_states = tensor(np.ones((config.num_workers))).byte()
         self.prev_options = self.is_initial_states.clone().long()
 

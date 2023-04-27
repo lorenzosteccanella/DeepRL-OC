@@ -113,7 +113,7 @@ def quantile_regression_dqn_feature(**kwargs):
     replay_kwargs = dict(
         memory_size=int(1e4),
         batch_size=config.batch_size)
-    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async=True)
+    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async2=True)
 
     config.random_action_prob = LinearSchedule(1.0, 0.1, 1e4)
     config.discount = 0.99
@@ -146,7 +146,7 @@ def quantile_regression_dqn_pixel(**kwargs):
         batch_size=config.batch_size,
         history_length=4,
     )
-    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async=True)
+    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async2=True)
 
     config.state_normalizer = ImageNormalizer()
     config.reward_normalizer = SignNormalizer()
@@ -177,7 +177,7 @@ def categorical_dqn_feature(**kwargs):
     replay_kwargs = dict(
         memory_size=int(1e4),
         batch_size=config.batch_size)
-    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async=True)
+    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async2=True)
 
     config.discount = 0.99
     config.target_network_update_freq = 200
@@ -211,7 +211,7 @@ def categorical_dqn_pixel(**kwargs):
         batch_size=config.batch_size,
         history_length=4,
     )
-    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async=True)
+    config.replay_fn = lambda: ReplayWrapper(UniformReplay, replay_kwargs, async2=True)
 
     config.discount = 0.99
     config.state_normalizer = ImageNormalizer()
@@ -453,7 +453,7 @@ def option_critic_feature(**kwargs):
     config = Config()
     config.merge(kwargs)
 
-    config.num_workers = 5
+    config.num_workers = 1
     config.task_fn = lambda: Task(config.game, num_envs=config.num_workers)
     config.eval_env = Task(config.game)
     config.optimizer_fn = lambda params: torch.optim.RMSprop(params, 0.001)
@@ -465,6 +465,7 @@ def option_critic_feature(**kwargs):
     config.termination_regularizer = 0.01
     config.entropy_weight = 0.01
     config.gradient_clip = 5
+
     run_steps(OptionCriticAgent(config))
 
 
@@ -643,11 +644,11 @@ if __name__ == '__main__':
     # td3_continuous(game=game)
 
     game = 'BreakoutNoFrameskip-v4'
-    dqn_pixel(game=game, n_step=1, replay_cls=UniformReplay, async_replay=False)
+    # dqn_pixel(game=game, n_step=1, replay_cls=UniformReplay, async_replay=False)
     # quantile_regression_dqn_pixel(game=game)
     # categorical_dqn_pixel(game=game)
     # rainbow_pixel(game=game, async_replay=False)
     # a2c_pixel(game=game)
     # n_step_dqn_pixel(game=game)
-    # option_critic_pixel(game=game)
+    option_critic_pixel(game=game)
     # ppo_pixel(game=game)
